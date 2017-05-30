@@ -12,8 +12,12 @@ public class TelaDoJogo : MonoBehaviour
     private Object TabuadaSquarePrefab;
     private List<GameObject> maze;
 
-    private const int X_AXIS = 17;
-    private const int Y_AXIS = 11;
+    private const int X_AXIS = 25;
+    private const int Y_AXIS = 15;
+
+    private const float SPAWN_X = 140f;
+    private const float SPAWN_Y = 645f;
+    private const float SIZE_SQUARE = 42.5f;
 
     private const int ANDAR_LESTE = 1;
     private const int ANDAR_OESTE = -1;
@@ -39,6 +43,13 @@ public class TelaDoJogo : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+    }
+
+    // inherited
+    void OnEnable()
+    {
+        if (Globals.gameScreen == null) return;
+
         int extN1 = Globals.n1;
         int extN2 = Globals.n2;
 
@@ -46,12 +57,6 @@ public class TelaDoJogo : MonoBehaviour
         t.text = extN1 + "";
         t = n2.GetComponent<Text>();
         t.text = extN2 + "";
-    }
-
-    // inherited
-    void OnEnable()
-    {
-        if (Globals.gameScreen == null) return;
 
         hp = new Image[3];
         Transform hpBar = Globals.gameScreen.transform.Find("hpBar");
@@ -219,10 +224,10 @@ public class TelaDoJogo : MonoBehaviour
 
     public void criarGridTabuadaSquare()
     {
-        float startX = 140f,
-                startY = 474f,
-                diffX = 42.5f,
-                diffY = 42.5f;
+        float startX = SPAWN_X,
+                startY = SPAWN_Y,
+                diffX = SIZE_SQUARE,
+                diffY = SIZE_SQUARE;
 
         maze = new List<GameObject>();
 
@@ -240,21 +245,6 @@ public class TelaDoJogo : MonoBehaviour
         marcarParedes();
         marcarCasaPossivel(maze.Count - 1);
         JOGO_INICIADO = true;
-    }
-
-    void criarCaminho2(int pos)
-    {
-        int rng = Random.Range(0, MAX_DIR);
-        for (int i = 0; i < MAX_DIR; i++, rng = ++rng % MAX_DIR)
-        {
-            Direcao dir = (Direcao)rng;
-            int dest = posDestino(pos, dir);
-            if (possivelAndar(dest, dir) && ehParede(dest))
-            {
-                marcarCasaPossivel(dest);
-                criarCaminho2(dest);
-            }
-        }
     }
 
     private IEnumerator recWait(bool vitoria)
@@ -319,12 +309,12 @@ public class TelaDoJogo : MonoBehaviour
     {
         if (idx != maze.Count)
         {
-            if (decidirCampoLimpo(idx))
+            for (int i = 0; i < X_AXIS; i++)
             {
-                yield return new WaitForSeconds(0.01f);
+                revelarCasa(idx++);
             }
-            revelarCasa(idx);
-            StartCoroutine(revelarTodos(idx + 1, vitoria));
+            yield return new WaitForSeconds(0.1f);
+            StartCoroutine(revelarTodos(idx, vitoria));
         } else
         {
             StartCoroutine(recWait(vitoria));
@@ -433,16 +423,7 @@ public class TelaDoJogo : MonoBehaviour
         {
             if (casaNaoPisada(i))
             {
-                int rng = Random.Range(0, 10);
-
-                if (rng < 3)
-                {
-                    marcarCasaPossivel(i);
-                }
-                else
-                {
-                    criarParede(i);
-                }
+                criarParede(i);
             }
 
             Text math1 = maze[i].transform.FindChild("math1").GetComponent<Text>();
